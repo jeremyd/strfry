@@ -93,24 +93,6 @@ void RelayServer::ingesterProcessEvent(lmdb::txn &txn, uint64_t connId, std::str
     PackedEventView packed(packedStr);
 
     {
-        bool foundProtected = false;
-
-        packed.foreachTag([&](char tagName, std::string_view tagVal){
-            if (tagName == '-') {
-                foundProtected = true;
-                return false;
-            }
-            return true;
-        });
-
-        if (foundProtected) {
-            LI << "Protected event, skipping";
-            sendOKResponse(connId, to_hex(packed.id()), false, "blocked: event marked as protected");
-            return;
-        }
-    }
-
-    {
         auto existing = lookupEventById(txn, packed.id());
         if (existing) {
             LI << "Duplicate event, skipping";
